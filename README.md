@@ -1,6 +1,6 @@
 # ExamGuard – Anti-Cheating Visualization
 
-A browser-based visualization dashboard that monitors student behaviour during online exams and flags attempts to send exam content to AI tools (ChatGPT, Copilot, etc.).
+A browser-based visualization dashboard that monitors student behavior during online exams and flags attempts to send exam content to AI tools (ChatGPT, Copilot, etc.).
 
 ## Features
 
@@ -16,7 +16,7 @@ A browser-based visualization dashboard that monitors student behaviour during o
 ### Student Exam Page (`exam.html`)
 - Realistic mock exam (multiple choice + short answer + essay)
 - Countdown timer with colour-coded urgency (normal → warning → danger)
-- **Behaviour monitoring** via `js/monitor.js`:
+- **Behavior monitoring** via `js/monitor.js`:
   - Tab visibility change (`visibilitychange` API)
   - Window blur / focus loss
   - `copy` and `paste` clipboard events
@@ -56,7 +56,7 @@ anti-cheating/
 │   └── style.css     # All styles
 └── js/
     ├── dashboard.js  # Dashboard logic, charts, live feed
-    └── monitor.js    # Student-side behaviour detection
+    └── monitor.js    # Student-side behavior detection
 ```
 
 ## Technology

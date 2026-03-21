@@ -1,5 +1,5 @@
 /**
- * monitor.js – Client-side behaviour monitoring for the exam page.
+ * monitor.js – Client-side behavior monitoring for the exam page.
  *
  * Detects suspicious actions that are commonly used when students try to
  * send exam content to AI tools (ChatGPT, etc.) and broadcasts each event
@@ -28,6 +28,11 @@
     rapid_paste:      35,
     screenshot_key:   30,
   };
+
+  // Detection thresholds
+  const RAPID_KEY_GAP_MS    = 20;  // max ms between keystrokes to consider "rapid"
+  const RAPID_KEY_COUNT     = 8;   // consecutive rapid keystrokes before triggering
+  const DEVTOOLS_PX_THRESH  = 160; // px difference between outer/inner window that suggests DevTools
 
   // ─── State ─────────────────────────────────────────────────────────────────
   let totalRisk   = 0;
@@ -150,9 +155,9 @@
     const diff = now - lastKeyTime;
     lastKeyTime = now;
 
-    if (diff < 20 && !ctrl) {
+    if (diff < RAPID_KEY_GAP_MS && !ctrl) {
       pasteBuffer.push(now);
-      if (pasteBuffer.length >= 8) {
+      if (pasteBuffer.length >= RAPID_KEY_COUNT) {
         emit('rapid_paste', 'Suspiciously rapid typing detected (possible clipboard inject)', 'danger');
         pasteBuffer = [];
       }
@@ -163,7 +168,7 @@
 
   // ─── Detection: DevTools (heuristic) ──────────────────────────────────────
   (function detectDevTools() {
-    const threshold = 160;
+    const threshold = DEVTOOLS_PX_THRESH;
     let devToolsOpen = false;
 
     setInterval(function () {
