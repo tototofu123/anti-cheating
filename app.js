@@ -106,6 +106,7 @@ async function init() {
   els.watermark.className = "watermark";
 
   setupMethodToggles();
+  applyMethodSideEffects();
   setupStaticListeners();
   setupSingleTabGuard();
   setupHoneyPot();
@@ -154,8 +155,14 @@ function setupMethodToggles() {
       return;
     }
     method.enabled = input.checked;
+    applyMethodSideEffects();
     updateSummary();
   });
+}
+
+function applyMethodSideEffects() {
+  document.body.classList.toggle("lock-select", methodOn(10));
+  document.body.classList.toggle("print-blackout", methodOn(33));
 }
 
 function setupStaticListeners() {

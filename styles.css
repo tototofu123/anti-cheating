@@ -23,6 +23,10 @@ body {
     var(--bg);
   color: var(--text);
   font-family: "IBM Plex Sans", sans-serif;
+  user-select: text;
+}
+
+body.lock-select {
   user-select: none;
 }
 
@@ -339,7 +343,7 @@ button.ghost {
 }
 
 @media print {
-  body {
+  body.print-blackout {
     display: none !important;
   }
 }
