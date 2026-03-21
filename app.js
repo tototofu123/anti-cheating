@@ -44,6 +44,8 @@ const state = {
   fontMode: 0,
   lastWidth: window.innerWidth,
   violationTimes: [],
+  violationCooldowns: new Map(),
+  suppressedViolations: 0,
   inputReplay: new Map(),
   fullscreenArmed: false,
   keyMap: { score: "score_a" },
@@ -969,6 +971,22 @@ function remapChars(value, mode) {
 function registerViolation(message, level = "warn") {
   const now = new Date().toLocaleTimeString();
   const nowMs = Date.now();
+  const key = `${level}:${message}`;
+  const lastSeen = state.violationCooldowns.get(key) || 0;
+  if (nowMs - lastSeen < 1200) {
+    state.suppressedViolations += 1;
+    return;
+  }
+  state.violationCooldowns.set(key, nowMs);
+
+  if (state.violationCooldowns.size > 300) {
+    for (const [k, t] of state.violationCooldowns) {
+      if (nowMs - t > 30000) {
+        state.violationCooldowns.delete(k);
+      }
+    }
+  }
+
   state.violations.unshift({ message, level, time: now });
   state.violations = state.violations.slice(0, 80);
   state.violationTimes.push(nowMs);
@@ -1030,6 +1048,7 @@ function updateSummary() {
     "Category Split",
     `H:${byCategory.HTML} C:${byCategory.CSS} J:${byCategory.JS} L:${byCategory.Logic} S:${byCategory.Screen} E:${byCategory.Env} O:${byCategory.Other}`
   );
+  appendSummaryLine("Suppressed Repeats", String(state.suppressedViolations));
   appendSummaryLine("Latest Signal", latest ? latest.message : "none");
   els.sessionState.textContent = state.lock ? "Locked" : state.strikes > 0 ? "Flagged" : "Clean";
   els.sessionState.style.color = state.lock ? "var(--danger)" : state.strikes > 0 ? "var(--warn)" : "var(--accent)";
