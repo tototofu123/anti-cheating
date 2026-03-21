@@ -338,18 +338,18 @@ function setupFullscreenGuard() {
 }
 
 function setupSingleTabGuard() {
-  const tabId = crypto.randomUUID();
+  const tabId = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `tab_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const channel = methodOn(16) && "BroadcastChannel" in window ? new BroadcastChannel("exam_shield_gate") : null;
   const ownerKey = "exam_shield_owner";
 
   if (methodOn(16)) {
-    const existing = safeParse(localStorage.getItem(ownerKey));
+    const existing = safeParse(safeStorageGet(ownerKey));
     if (existing && existing.tabId !== tabId && Date.now() - existing.t < 5000) {
       registerViolation("Active owner tab already exists", "danger");
       lockSession();
       return;
     }
-    localStorage.setItem(ownerKey, JSON.stringify({ tabId, t: Date.now() }));
+    safeStorageSet(ownerKey, JSON.stringify({ tabId, t: Date.now() }));
   }
 
   if (channel) {
@@ -374,8 +374,8 @@ function setupSingleTabGuard() {
     if (!methodOn(16)) {
       return;
     }
-    localStorage.setItem(ownerKey, JSON.stringify({ tabId, t: Date.now() }));
-    localStorage.setItem(heartbeatKey, JSON.stringify({ tabId, t: Date.now() }));
+    safeStorageSet(ownerKey, JSON.stringify({ tabId, t: Date.now() }));
+    safeStorageSet(heartbeatKey, JSON.stringify({ tabId, t: Date.now() }));
   };
   setInterval(pulse, 1500);
   pulse();
@@ -406,9 +406,9 @@ function setupSingleTabGuard() {
   });
 
   window.addEventListener("beforeunload", () => {
-    const owner = safeParse(localStorage.getItem(ownerKey));
+    const owner = safeParse(safeStorageGet(ownerKey));
     if (owner?.tabId === tabId) {
-      localStorage.removeItem(ownerKey);
+      safeStorageRemove(ownerKey);
     }
   });
 }
@@ -1096,6 +1096,32 @@ function toBase64(uint8) {
     bin += String.fromCharCode(b);
   }
   return btoa(bin);
+}
+
+function safeStorageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function safeStorageRemove(key) {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function safeParse(raw) {
