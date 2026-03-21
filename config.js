@@ -1,0 +1,47 @@
+export const QUESTION_COUNT = 20;
+export const TEXT_POOL_SIZE = 100;
+export const EXAM_SECONDS = 20 * 60;
+export const DEVTOOLS_GAP_THRESHOLD = 150;
+
+export const methods = [
+  { id: 1, name: "Z-Index Overlay", category: "HTML", enabled: true },
+  { id: 2, name: "SVG Text Injection", category: "HTML", enabled: true },
+  { id: 3, name: "Ghost Elements", category: "HTML", enabled: true },
+  { id: 4, name: "Shadow DOM Encapsulation", category: "HTML", enabled: true },
+  { id: 5, name: "Zero-Width Injection", category: "HTML", enabled: true },
+  { id: 6, name: "Canvas Rendering", category: "HTML", enabled: true },
+  { id: 7, name: "DOM Order Scrambling", category: "HTML", enabled: true },
+  { id: 8, name: "Blur-on-Blur", category: "CSS", enabled: true },
+  { id: 9, name: "Pseudo-Element Content", category: "CSS", enabled: true },
+  { id: 10, name: "User-Select Lock", category: "CSS", enabled: true },
+  { id: 11, name: "Dynamic Color Shift", category: "CSS", enabled: true },
+  { id: 12, name: "Font Glyph Mapping (Sim)", category: "CSS", enabled: true },
+  { id: 13, name: "Pseudo Fragmentation", category: "CSS", enabled: true },
+  { id: 14, name: "Keystroke Cadence", category: "JS", enabled: true },
+  { id: 15, name: "Tab Swap", category: "JS", enabled: true },
+  { id: 16, name: "Multi-Tab Block", category: "JS", enabled: true },
+  { id: 17, name: "Right-Click / DevTools Trap", category: "JS", enabled: true },
+  { id: 18, name: "Mouse Trajectory", category: "JS", enabled: true },
+  { id: 19, name: "Clipboard Poisoning", category: "JS", enabled: true },
+  { id: 20, name: "Console Flooding", category: "JS", enabled: false },
+  { id: 21, name: "Honey-Pot Function", category: "Logic", enabled: true },
+  { id: 22, name: "Salted Checksum", category: "Logic", enabled: true },
+  { id: 23, name: "State Scrambling", category: "Logic", enabled: true },
+  { id: 24, name: "WASM Validator", category: "Logic", enabled: true },
+  { id: 25, name: "Control Flow Flattening (Sim)", category: "Logic", enabled: true },
+  { id: 26, name: "Debugger Loop", category: "Logic", enabled: false },
+  { id: 27, name: "Self-Destruct State", category: "Logic", enabled: true },
+  { id: 28, name: "Viewport Detection", category: "Logic", enabled: true },
+  { id: 29, name: "Encoded Prompt Store", category: "Anti-Analysis", enabled: true },
+  { id: 30, name: "Build-Time Injection", category: "GitHub", enabled: true },
+  { id: 31, name: "Moving Watermark", category: "Screen", enabled: true },
+  { id: 32, name: "Print Event Wipe", category: "Screen", enabled: true },
+  { id: 33, name: "Print CSS Blackout", category: "Screen", enabled: true },
+  { id: 34, name: "Brightness Pulse", category: "Screen", enabled: true },
+  { id: 35, name: "Display Capture Signal", category: "Screen", enabled: true },
+  { id: 36, name: "Device Motion", category: "Env", enabled: true },
+  { id: 37, name: "Battery / CPU Heuristic", category: "Env", enabled: true },
+  { id: 38, name: "WebCrypto Encryption", category: "Env", enabled: true },
+  { id: 39, name: "Latency Jitter Check", category: "Env", enabled: true },
+  { id: 40, name: "Temporal Font Mapping", category: "Env", enabled: true }
+];

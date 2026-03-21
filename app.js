@@ -1,7 +1,21 @@
-const QUESTION_COUNT = 20;
-const TEXT_POOL_SIZE = 100;
-const EXAM_SECONDS = 20 * 60;
-const DEVTOOLS_GAP_THRESHOLD = 150;
+import {
+  QUESTION_COUNT,
+  TEXT_POOL_SIZE,
+  EXAM_SECONDS,
+  DEVTOOLS_GAP_THRESHOLD,
+  methods
+} from "./config.js";
+import {
+  buildTextPromptPool,
+  pick,
+  shuffle,
+  toBase64,
+  safeStorageGet,
+  safeStorageSet,
+  safeStorageRemove,
+  safeParse,
+  safeEvaluate
+} from "./utils.js";
 
 const els = {
   questionNav: document.getElementById("questionNav"),
@@ -56,49 +70,6 @@ const state = {
 
 const textPromptPool = buildTextPromptPool(TEXT_POOL_SIZE);
 const checksums = new Map();
-
-const methods = [
-  { id: 1, name: "Z-Index Overlay", category: "HTML", enabled: true },
-  { id: 2, name: "SVG Text Injection", category: "HTML", enabled: true },
-  { id: 3, name: "Ghost Elements", category: "HTML", enabled: true },
-  { id: 4, name: "Shadow DOM Encapsulation", category: "HTML", enabled: true },
-  { id: 5, name: "Zero-Width Injection", category: "HTML", enabled: true },
-  { id: 6, name: "Canvas Rendering", category: "HTML", enabled: true },
-  { id: 7, name: "DOM Order Scrambling", category: "HTML", enabled: true },
-  { id: 8, name: "Blur-on-Blur", category: "CSS", enabled: true },
-  { id: 9, name: "Pseudo-Element Content", category: "CSS", enabled: true },
-  { id: 10, name: "User-Select Lock", category: "CSS", enabled: true },
-  { id: 11, name: "Dynamic Color Shift", category: "CSS", enabled: true },
-  { id: 12, name: "Font Glyph Mapping (Sim)", category: "CSS", enabled: true },
-  { id: 13, name: "Pseudo Fragmentation", category: "CSS", enabled: true },
-  { id: 14, name: "Keystroke Cadence", category: "JS", enabled: true },
-  { id: 15, name: "Tab Swap", category: "JS", enabled: true },
-  { id: 16, name: "Multi-Tab Block", category: "JS", enabled: true },
-  { id: 17, name: "Right-Click / DevTools Trap", category: "JS", enabled: true },
-  { id: 18, name: "Mouse Trajectory", category: "JS", enabled: true },
-  { id: 19, name: "Clipboard Poisoning", category: "JS", enabled: true },
-  { id: 20, name: "Console Flooding", category: "JS", enabled: false },
-  { id: 21, name: "Honey-Pot Function", category: "Logic", enabled: true },
-  { id: 22, name: "Salted Checksum", category: "Logic", enabled: true },
-  { id: 23, name: "State Scrambling", category: "Logic", enabled: true },
-  { id: 24, name: "WASM Validator", category: "Logic", enabled: true },
-  { id: 25, name: "Control Flow Flattening (Sim)", category: "Logic", enabled: true },
-  { id: 26, name: "Debugger Loop", category: "Logic", enabled: false },
-  { id: 27, name: "Self-Destruct State", category: "Logic", enabled: true },
-  { id: 28, name: "Viewport Detection", category: "Logic", enabled: true },
-  { id: 29, name: "Encoded Prompt Store", category: "Anti-Analysis", enabled: true },
-  { id: 30, name: "Build-Time Injection", category: "GitHub", enabled: true },
-  { id: 31, name: "Moving Watermark", category: "Screen", enabled: true },
-  { id: 32, name: "Print Event Wipe", category: "Screen", enabled: true },
-  { id: 33, name: "Print CSS Blackout", category: "Screen", enabled: true },
-  { id: 34, name: "Brightness Pulse", category: "Screen", enabled: true },
-  { id: 35, name: "Display Capture Signal", category: "Screen", enabled: true },
-  { id: 36, name: "Device Motion", category: "Env", enabled: true },
-  { id: 37, name: "Battery / CPU Heuristic", category: "Env", enabled: true },
-  { id: 38, name: "WebCrypto Encryption", category: "Env", enabled: true },
-  { id: 39, name: "Latency Jitter Check", category: "Env", enabled: true },
-  { id: 40, name: "Temporal Font Mapping", category: "Env", enabled: true }
-];
 
 const methodMap = new Map(methods.map((m) => [m.id, m]));
 
@@ -654,28 +625,6 @@ function makeMathQuestion(id) {
   };
 }
 
-function safeEvaluate(expr) {
-  const hasMathJs = typeof window !== "undefined" && window.math && typeof window.math.evaluate === "function";
-  if (hasMathJs) {
-    try {
-      return Number(window.math.evaluate(expr));
-    } catch {
-      return simpleEval(expr);
-    }
-  }
-  return simpleEval(expr);
-}
-
-function simpleEval(expr) {
-  const m = expr.match(/^\s*(-?\d+)\s*([+-])\s*(-?\d+)\s*$/);
-  if (!m) {
-    return 0;
-  }
-  const a = Number(m[1]);
-  const op = m[2];
-  const b = Number(m[3]);
-  return op === "+" ? a + b : a - b;
-}
 
 function pickRenderMode() {
   const modes = ["dom", "svg", "canvas", "pseudo", "shadow", "scramble"];
@@ -1201,74 +1150,3 @@ async function saltedHash(value) {
   }
 }
 
-function buildTextPromptPool(size) {
-  const starts = ["hi", "today", "please", "always", "never", "maybe", "quickly", "calmly", "bright", "gentle"];
-  const mids = ["how are you", "focus on the task", "read this line", "stay honest", "type with care", "keep learning", "show your work", "watch each step", "be precise", "check signs"];
-  const ends = ["today", "right now", "for this exam", "without tools", "in this session", "with full attention", "for all questions", "before submit", "and continue", "for practice"];
-  const pool = [];
-  while (pool.length < size) {
-    const text = `${pick(starts)} ${pick(mids)} ${pick(ends)}`;
-    if (!pool.includes(text)) {
-      pool.push(text);
-    }
-  }
-  return pool;
-}
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function shuffle(arr) {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function toBase64(uint8) {
-  let bin = "";
-  for (const b of uint8) {
-    bin += String.fromCharCode(b);
-  }
-  return btoa(bin);
-}
-
-function safeStorageGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeStorageSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function safeStorageRemove(key) {
-  try {
-    localStorage.removeItem(key);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function safeParse(raw) {
-  if (!raw) {
-    return null;
-  }
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
