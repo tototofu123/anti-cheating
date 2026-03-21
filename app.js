@@ -36,6 +36,7 @@ const state = {
   startedAt: Date.now(),
   remaining: EXAM_SECONDS,
   lock: false,
+  lockReason: "",
   hiddenAt: null,
   keystrokes: [],
   mousePoints: [],
@@ -353,7 +354,7 @@ function setupSingleTabGuard() {
     const existing = safeParse(safeStorageGet(ownerKey));
     if (existing && existing.tabId !== tabId && Date.now() - existing.t < 5000) {
       registerViolation("Active owner tab already exists", "danger");
-      lockSession();
+      lockSession("Single-tab policy: owner tab already active");
       return;
     }
     safeStorageSet(ownerKey, JSON.stringify({ tabId, t: Date.now() }));
@@ -371,7 +372,7 @@ function setupSingleTabGuard() {
       }
       if (msg.type === "exists" && msg.tabId !== tabId) {
         registerViolation("Second tab detected", "danger");
-        lockSession();
+        lockSession("Single-tab policy: second tab detected");
       }
     };
   }
@@ -395,7 +396,7 @@ function setupSingleTabGuard() {
       const owner = safeParse(event.newValue);
       if (owner && owner.tabId !== tabId && Date.now() - owner.t < 5000) {
         registerViolation("Owner token moved to another tab", "danger");
-        lockSession();
+        lockSession("Single-tab policy: owner token conflict");
       }
       return;
     }
@@ -408,7 +409,7 @@ function setupSingleTabGuard() {
     }
     if (data.tabId !== tabId && Date.now() - data.t < 2600) {
       registerViolation("Storage heartbeat conflict", "danger");
-      lockSession();
+      lockSession("Single-tab policy: heartbeat conflict");
     }
   });
 
@@ -954,7 +955,7 @@ function registerViolation(message, level = "warn") {
   }
 
   if (state.strikes >= 6) {
-    lockSession();
+    lockSession("Strike limit reached");
   }
   updateSummary();
   renderLog();
@@ -975,22 +976,39 @@ function renderLog() {
 
 function updateSummary() {
   const enabled = methods.filter((m) => m.enabled).length;
+  const byCategory = {
+    HTML: methods.filter((m) => m.enabled && m.category === "HTML").length,
+    CSS: methods.filter((m) => m.enabled && m.category === "CSS").length,
+    JS: methods.filter((m) => m.enabled && m.category === "JS").length,
+    Logic: methods.filter((m) => m.enabled && m.category === "Logic").length,
+    Screen: methods.filter((m) => m.enabled && m.category === "Screen").length,
+    Env: methods.filter((m) => m.enabled && m.category === "Env").length,
+    Other: methods.filter((m) => m.enabled && ["Anti-Analysis", "GitHub"].includes(m.category)).length
+  };
+  const latest = state.violations[0];
   els.methodSummary.innerHTML = `
     <strong>Enabled Methods:</strong> ${enabled}/40<br />
     <strong>Strikes:</strong> ${state.strikes}<br />
-    <strong>Build Session:</strong> ${state.currentSessionId}
+    <strong>Build Session:</strong> ${state.currentSessionId}<br />
+    <strong>Category Split:</strong> H:${byCategory.HTML} C:${byCategory.CSS} J:${byCategory.JS} L:${byCategory.Logic} S:${byCategory.Screen} E:${byCategory.Env} O:${byCategory.Other}<br />
+    <strong>Latest Signal:</strong> ${latest ? latest.message : "none"}
   `;
   els.sessionState.textContent = state.lock ? "Locked" : state.strikes > 0 ? "Flagged" : "Clean";
   els.sessionState.style.color = state.lock ? "var(--danger)" : state.strikes > 0 ? "var(--warn)" : "var(--accent)";
 }
 
-function lockSession() {
+function lockSession(reason = "Policy violations exceeded") {
   if (state.lock) {
     return;
   }
   state.lock = true;
+  state.lockReason = reason;
   els.examShell.classList.add("locked");
   const lockView = els.lockTemplate.content.cloneNode(true);
+  const reasonNode = lockView.querySelector("[data-lock-reason]");
+  if (reasonNode) {
+    reasonNode.textContent = reason;
+  }
   document.body.appendChild(lockView);
   updateSummary();
 }
