@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam – ExamGuard Demo</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="exam-body">
+
+<!-- Timer / header -->
+<header class="exam-header">
+  <h1>📝 Midterm Exam – Computer Science 101</h1>
+  <div style="display:flex;align-items:center;gap:1.5rem;">
+    <span style="font-size:0.85rem;color:#636e87;">Logged in as: <strong id="student-name-display">Student</strong></span>
+    <div class="exam-timer" id="exam-timer">45:00</div>
+  </div>
+</header>
+
+<!-- Login screen -->
+<div id="login-screen" class="exam-container" style="max-width:420px;margin-top:4rem;">
+  <div class="exam-card" style="text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🛡️</div>
+    <h2 style="margin-bottom:0.5rem;">Enter Your Name</h2>
+    <p style="color:#636e87;font-size:0.875rem;margin-bottom:1.5rem;">
+      This exam is monitored. Suspicious activity such as tab switching,
+      copying content, or using AI tools will be flagged.
+    </p>
+    <input type="text" id="name-input" placeholder="Your full name"
+           style="width:100%;padding:0.7rem 1rem;border:1px solid #e0e4ef;border-radius:8px;font-size:0.95rem;outline:none;margin-bottom:1rem;" />
+    <button onclick="startExam()" class="exam-submit-btn">Start Exam</button>
+    <p style="margin-top:1rem;font-size:0.8rem;color:#a0a8be;">
+      Open the <a href="index.html">Dashboard</a> in another tab to see monitoring in real-time.
+    </p>
+  </div>
+</div>
+
+<!-- Exam screen (hidden until login) -->
+<div id="exam-screen" style="display:none;">
+  <div class="exam-container">
+
+    <div class="exam-card">
+      <h2>Section 1 – Multiple Choice</h2>
+      <p style="font-size:0.85rem;color:#636e87;margin-bottom:1.25rem;">
+        Choose the best answer for each question.
+      </p>
+
+      <div class="question-block">
+        <div class="question-text">1. Which data structure operates on a Last-In-First-Out (LIFO) basis?</div>
+        <div class="question-options">
+          <label><input type="radio" name="q1" value="a" /> <span>Queue</span></label>
+          <label><input type="radio" name="q1" value="b" /> <span>Stack</span></label>
+          <label><input type="radio" name="q1" value="c" /> <span>Tree</span></label>
+          <label><input type="radio" name="q1" value="d" /> <span>Linked List</span></label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <div class="question-text">2. What is the time complexity of binary search on a sorted array?</div>
+        <div class="question-options">
+          <label><input type="radio" name="q2" value="a" /> <span>O(n)</span></label>
+          <label><input type="radio" name="q2" value="b" /> <span>O(n²)</span></label>
+          <label><input type="radio" name="q2" value="c" /> <span>O(log n)</span></label>
+          <label><input type="radio" name="q2" value="d" /> <span>O(1)</span></label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <div class="question-text">3. Which of the following is NOT a characteristic of an object-oriented programming language?</div>
+        <div class="question-options">
+          <label><input type="radio" name="q3" value="a" /> <span>Encapsulation</span></label>
+          <label><input type="radio" name="q3" value="b" /> <span>Polymorphism</span></label>
+          <label><input type="radio" name="q3" value="c" /> <span>Pointer arithmetic</span></label>
+          <label><input type="radio" name="q3" value="d" /> <span>Inheritance</span></label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <div class="question-text">4. In a relational database, a foreign key is used to:</div>
+        <div class="question-options">
+          <label><input type="radio" name="q4" value="a" /> <span>Speed up queries</span></label>
+          <label><input type="radio" name="q4" value="b" /> <span>Establish a link between two tables</span></label>
+          <label><input type="radio" name="q4" value="c" /> <span>Encrypt data</span></label>
+          <label><input type="radio" name="q4" value="d" /> <span>Delete duplicate records</span></label>
+        </div>
+      </div>
+    </div><!-- /card -->
+
+    <div class="exam-card">
+      <h2>Section 2 – Short Answer</h2>
+      <p style="font-size:0.85rem;color:#636e87;margin-bottom:1.25rem;">
+        Answer in your own words. Do not copy from external sources.
+      </p>
+
+      <div class="question-block">
+        <div class="question-text">5. Explain the difference between a process and a thread in an operating system. (4 marks)</div>
+        <textarea class="answer-box" placeholder="Write your answer here…"></textarea>
+      </div>
+
+      <div class="question-block">
+        <div class="question-text">6. Describe the key steps in the Agile software development lifecycle. (6 marks)</div>
+        <textarea class="answer-box" placeholder="Write your answer here…"></textarea>
+      </div>
+    </div><!-- /card -->
+
+    <div class="exam-card">
+      <h2>Section 3 – Essay</h2>
+      <div class="question-block">
+        <div class="question-text">
+          7. Discuss the ethical implications of artificial intelligence in modern society.
+          Include at least three specific examples and your personal perspective. (15 marks)
+        </div>
+        <textarea class="answer-box" style="min-height:180px;" placeholder="Write your essay here…"></textarea>
+      </div>
+    </div>
+
+    <button class="exam-submit-btn" onclick="submitExam()">Submit Exam</button>
+    <p style="text-align:center;font-size:0.8rem;color:#a0a8be;margin-top:0.75rem;margin-bottom:2rem;">
+      Ensure you have answered all questions before submitting.
+    </p>
+
+  </div>
+</div><!-- /exam-screen -->
+
+<!-- Monitor badge (visible during exam) -->
+<div class="monitor-overlay" id="monitor-overlay" style="display:none;">
+  <div class="monitor-badge">
+    <div class="status-dot"></div>
+    Monitoring active
+  </div>
+</div>
+
+<script>
+  // ── Timer ────────────────────────────────────────────────────────────────
+  var EXAM_MINUTES = 45;
+  var remaining    = EXAM_MINUTES * 60;
+  var timerEl      = document.getElementById('exam-timer');
+  var timerInterval;
+
+  function startTimer() {
+    timerInterval = setInterval(function () {
+      remaining--;
+      if (remaining < 0) {
+        clearInterval(timerInterval);
+        submitExam();
+        return;
+      }
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      timerEl.textContent = pad(m) + ':' + pad(s);
+      timerEl.className   = 'exam-timer' +
+        (remaining < 300 ? ' danger' : remaining < 600 ? ' warning' : '');
+    }, 1000);
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : n; }
+
+  // ── Login ────────────────────────────────────────────────────────────────
+  function startExam() {
+    var nameEl = document.getElementById('name-input');
+    var name   = nameEl.value.trim();
+    if (!name) { nameEl.style.borderColor = '#e74c3c'; nameEl.focus(); return; }
+
+    localStorage.setItem('examStudentName', name);
+    localStorage.removeItem('examStudentId');   // fresh ID each session
+
+    document.getElementById('student-name-display').textContent = name;
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('exam-screen').style.display   = 'block';
+    document.getElementById('monitor-overlay').style.display = 'block';
+
+    startTimer();
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+  function submitExam() {
+    clearInterval(timerInterval);
+    document.getElementById('exam-screen').innerHTML =
+      '<div class="exam-container" style="text-align:center;padding-top:3rem;">' +
+        '<div class="exam-card">' +
+          '<div style="font-size:3rem;margin-bottom:0.75rem;">✅</div>' +
+          '<h2 style="margin-bottom:0.5rem;">Exam Submitted</h2>' +
+          '<p style="color:#636e87;font-size:0.9rem;margin-bottom:1.5rem;">Your answers have been recorded. The examiner has been notified.</p>' +
+          '<a href="index.html" style="display:inline-block;padding:0.75rem 1.5rem;background:#4f8ef7;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">View Monitoring Dashboard</a>' +
+        '</div>' +
+      '</div>';
+  }
+</script>
+
+<!-- Monitor.js loads after login so student ID is already set -->
+<script src="js/monitor.js"></script>
+
+</body>
+</html>
