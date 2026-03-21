@@ -20,6 +20,7 @@ const els = {
   brightnessPulse: document.getElementById("brightnessPulse"),
   lockTemplate: document.getElementById("lockTemplate"),
   triggerCaptureBtn: document.getElementById("triggerCaptureBtn"),
+  exportLogBtn: document.getElementById("exportLogBtn"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
   submitBtn: document.getElementById("submitBtn"),
@@ -188,6 +189,8 @@ function setupStaticListeners() {
     }
     registerViolation("Manual display capture signal", "warn");
   });
+
+  els.exportLogBtn.addEventListener("click", exportSessionLog);
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -1065,6 +1068,34 @@ function appendSummaryLine(label, value) {
   els.methodSummary.appendChild(strong);
   els.methodSummary.append(` ${value}`);
   els.methodSummary.appendChild(document.createElement("br"));
+}
+
+function exportSessionLog() {
+  const payload = {
+    candidateId: els.candidateId.textContent || "unknown",
+    sessionId: state.currentSessionId,
+    exportedAt: new Date().toISOString(),
+    strikes: state.strikes,
+    lock: state.lock,
+    lockReason: state.lockReason,
+    suppressedViolations: state.suppressedViolations,
+    enabledMethods: methods.filter((m) => m.enabled).map((m) => ({ id: m.id, name: m.name, category: m.category })),
+    violations: state.violations,
+    score: state.scrambledState[state.keyMap.score] ?? null,
+    remainingSeconds: state.remaining
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `examshield-log-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  registerViolation("Session log exported", "info");
 }
 
 function lockSession(reason = "Policy violations exceeded") {
