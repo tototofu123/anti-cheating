@@ -628,7 +628,7 @@ function makeMathQuestion(id) {
   const b = Math.floor(Math.random() * 40) + 1;
   const op = Math.random() > 0.45 ? "+" : "-";
   const expr = `${a} ${op} ${b}`;
-  const value = math.evaluate(expr);
+  const value = safeEvaluate(expr);
   const choices = shuffle([value, value + 1, value - 2, value + 3]);
   return {
     id,
@@ -638,6 +638,29 @@ function makeMathQuestion(id) {
     choices,
     answer: String(value)
   };
+}
+
+function safeEvaluate(expr) {
+  const hasMathJs = typeof window !== "undefined" && window.math && typeof window.math.evaluate === "function";
+  if (hasMathJs) {
+    try {
+      return Number(window.math.evaluate(expr));
+    } catch {
+      return simpleEval(expr);
+    }
+  }
+  return simpleEval(expr);
+}
+
+function simpleEval(expr) {
+  const m = expr.match(/^\s*(-?\d+)\s*([+-])\s*(-?\d+)\s*$/);
+  if (!m) {
+    return 0;
+  }
+  const a = Number(m[1]);
+  const op = m[2];
+  const b = Number(m[3]);
+  return op === "+" ? a + b : a - b;
 }
 
 function pickRenderMode() {
@@ -1032,13 +1055,18 @@ async function encryptedStore(questionId, value) {
     return;
   }
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", enc.encode(state.currentSessionId.padEnd(16, "_")), { name: "AES-GCM" }, false, ["encrypt"]);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const payload = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(value));
-  state.encryptedAnswers[questionId] = {
-    iv: toBase64(iv),
-    data: toBase64(new Uint8Array(payload))
-  };
+  try {
+    const key = await crypto.subtle.importKey("raw", enc.encode(state.currentSessionId.padEnd(16, "_")), { name: "AES-GCM" }, false, ["encrypt"]);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const payload = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(value));
+    state.encryptedAnswers[questionId] = {
+      iv: toBase64(iv),
+      data: toBase64(new Uint8Array(payload))
+    };
+  } catch {
+    state.encryptedAnswers[questionId] = value;
+    registerViolation("Encryption fallback used", "info");
+  }
 }
 
 function gradeExam() {
@@ -1089,9 +1117,16 @@ function flowDispatcher(user, answer) {
 
 async function saltedHash(value) {
   const salt = `${state.currentSessionId}:salt:v1`;
-  const data = new TextEncoder().encode(`${value}::${salt}`);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return toBase64(new Uint8Array(digest));
+  if (!window.crypto?.subtle) {
+    return `plain:${value}::${salt}`;
+  }
+  try {
+    const data = new TextEncoder().encode(`${value}::${salt}`);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return toBase64(new Uint8Array(digest));
+  } catch {
+    return `plain:${value}::${salt}`;
+  }
 }
 
 function buildTextPromptPool(size) {
