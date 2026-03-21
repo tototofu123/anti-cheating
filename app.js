@@ -41,6 +41,9 @@ const state = {
   mousePoints: [],
   fontMode: 0,
   lastWidth: window.innerWidth,
+  violationTimes: [],
+  inputReplay: new Map(),
+  fullscreenArmed: false,
   keyMap: { score: "score_a" },
   scrambledState: { score_a: 0 },
   currentSessionId: document.querySelector('meta[name="build-session"]')?.content || "local-session"
@@ -114,6 +117,7 @@ async function init() {
   startFontRemapCycle();
   rotateScrambleKey();
   setupDevtoolsSignals();
+  setupFullscreenGuard();
 
   state.questions = await buildQuestionSet();
   renderNav();
@@ -298,6 +302,39 @@ function setupStaticListeners() {
       console.clear();
     }, 1000);
   }
+}
+
+function setupFullscreenGuard() {
+  const arm = async () => {
+    if (state.fullscreenArmed || state.lock) {
+      return;
+    }
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        registerViolation("Fullscreen was not granted", "info");
+      }
+    }
+    state.fullscreenArmed = true;
+    window.removeEventListener("pointerdown", arm);
+    window.removeEventListener("keydown", arm);
+  };
+
+  window.addEventListener("pointerdown", arm, { once: true });
+  window.addEventListener("keydown", arm, { once: true });
+
+  document.addEventListener("fullscreenchange", () => {
+    if (state.lock || !state.fullscreenArmed) {
+      return;
+    }
+    if (!document.fullscreenElement) {
+      registerViolation("Exited fullscreen enclosure", "danger");
+      if (methodOn(15)) {
+        void swapCurrentQuestion();
+      }
+    }
+  });
 }
 
 function setupSingleTabGuard() {
@@ -770,6 +807,7 @@ function renderAnswerInput(question) {
     input.value = state.answers[question.id] || "";
     input.addEventListener("input", async (event) => {
       const value = event.target.value;
+      replayInputSignal(question.id, value);
       state.answers[question.id] = value;
       encryptedStore(question.id, value);
       if (methodOn(22)) {
@@ -781,6 +819,19 @@ function renderAnswerInput(question) {
     });
     els.answerForm.appendChild(input);
   }
+}
+
+function replayInputSignal(questionId, value) {
+  const now = performance.now();
+  const prev = state.inputReplay.get(questionId) || { t: now, len: 0 };
+  const dt = now - prev.t;
+  const delta = value.length - prev.len;
+
+  if (methodOn(14) && delta > 60 && dt < 120) {
+    registerViolation("Large instant text insertion detected", "warn");
+  }
+
+  state.inputReplay.set(questionId, { t: now, len: value.length });
 }
 
 function analyzeKeystrokes() {
@@ -876,10 +927,23 @@ function remapChars(value, mode) {
 
 function registerViolation(message, level = "warn") {
   const now = new Date().toLocaleTimeString();
+  const nowMs = Date.now();
   state.violations.unshift({ message, level, time: now });
   state.violations = state.violations.slice(0, 80);
+  state.violationTimes.push(nowMs);
+  state.violationTimes = state.violationTimes.filter((t) => nowMs - t < 12000);
   if (level !== "info") {
     state.strikes += level === "danger" ? 2 : 1;
+  }
+
+  if (state.violationTimes.length >= 4) {
+    state.strikes += 1;
+    state.violationTimes = [];
+    state.violations.unshift({
+      message: "Burst violation rate detected",
+      level: "danger",
+      time: new Date().toLocaleTimeString()
+    });
   }
 
   if (state.strikes >= 6) {
