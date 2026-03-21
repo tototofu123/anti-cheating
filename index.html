@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Frontend anti-cheating exam simulator" />
+    <meta name="build-session" content="ac-demo-20260321" />
+    <title>ExamShield Frontend Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="watermark" aria-hidden="true"></div>
+    <div id="brightnessPulse" aria-hidden="true"></div>
+
+    <header class="exam-header">
+      <div>
+        <p class="eyebrow">Secure Assessment</p>
+        <h1>ExamShield Simulator</h1>
+      </div>
+      <div class="header-meta">
+        <div class="pill"><span>Candidate</span><strong id="candidateId">Loading...</strong></div>
+        <div class="pill"><span>Time Left</span><strong id="timer">20:00</strong></div>
+        <div class="pill status"><span>Session</span><strong id="sessionState">Clean</strong></div>
+      </div>
+    </header>
+
+    <main class="exam-shell" id="examShell">
+      <aside class="panel question-nav">
+        <h2>Questions</h2>
+        <div id="questionNav" class="question-grid"></div>
+      </aside>
+
+      <section class="panel exam-main">
+        <div class="question-meta">
+          <span id="questionTypeBadge" class="badge">MCQ</span>
+          <span id="progressBadge" class="badge muted">Q1 / 20</span>
+        </div>
+        <div id="questionHost" class="question-host"></div>
+        <form id="answerForm" class="answer-area"></form>
+        <div class="actions">
+          <button id="prevBtn" type="button">Previous</button>
+          <button id="nextBtn" type="button">Next</button>
+          <button id="submitBtn" type="button" class="accent">Submit Exam</button>
+        </div>
+      </section>
+
+      <aside class="panel monitor">
+        <h2>Anti-Cheat Monitor</h2>
+        <p class="monitor-sub">40 frontend methods grouped by category.</p>
+        <div id="methodSummary" class="summary"></div>
+        <div id="violationLog" class="log"></div>
+        <button id="triggerCaptureBtn" type="button" class="ghost">Test Display Capture Signal</button>
+      </aside>
+    </main>
+
+    <section class="panel methods-panel">
+      <h2>Method Toggles (Demo)</h2>
+      <div id="methodToggles" class="toggles"></div>
+    </section>
+
+    <template id="lockTemplate">
+      <div class="lock-screen">
+        <h2>Session Locked</h2>
+        <p>Your session was locked due to repeated policy violations.</p>
+      </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.3/lib/browser/math.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
