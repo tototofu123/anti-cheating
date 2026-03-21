@@ -22,7 +22,8 @@ const els = {
   triggerCaptureBtn: document.getElementById("triggerCaptureBtn"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
-  submitBtn: document.getElementById("submitBtn")
+  submitBtn: document.getElementById("submitBtn"),
+  strikeMeterFill: document.getElementById("strikeMeterFill")
 };
 
 const state = {
@@ -995,6 +996,11 @@ function updateSummary() {
   `;
   els.sessionState.textContent = state.lock ? "Locked" : state.strikes > 0 ? "Flagged" : "Clean";
   els.sessionState.style.color = state.lock ? "var(--danger)" : state.strikes > 0 ? "var(--warn)" : "var(--accent)";
+
+  if (els.strikeMeterFill) {
+    const ratio = Math.max(0, Math.min(100, (state.strikes / 6) * 100));
+    els.strikeMeterFill.style.width = `${ratio}%`;
+  }
 }
 
 function lockSession(reason = "Policy violations exceeded") {
