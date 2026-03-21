@@ -138,11 +138,20 @@ function setupMethodToggles() {
   for (const m of methods) {
     const wrap = document.createElement("label");
     wrap.className = "toggle";
-    wrap.innerHTML = `
-      <input type="checkbox" data-mid="${m.id}" ${m.enabled ? "checked" : ""} />
-      <strong>${m.id}. ${m.name}</strong>
-      <small>${m.category}</small>
-    `;
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.dataset.mid = String(m.id);
+    input.checked = m.enabled;
+
+    const strong = document.createElement("strong");
+    strong.textContent = `${m.id}. ${m.name}`;
+
+    const small = document.createElement("small");
+    small.textContent = m.category;
+
+    wrap.appendChild(input);
+    wrap.appendChild(strong);
+    wrap.appendChild(small);
     frag.appendChild(wrap);
   }
   els.methodToggles.appendChild(frag);
@@ -990,7 +999,10 @@ function renderLog() {
   for (const entry of state.violations.slice(0, 25)) {
     const div = document.createElement("div");
     div.className = "log-entry";
-    div.innerHTML = `<strong>[${entry.time}]</strong> ${entry.message}`;
+    const strong = document.createElement("strong");
+    strong.textContent = `[${entry.time}]`;
+    div.appendChild(strong);
+    div.append(` ${entry.message}`);
     if (entry.level === "danger") {
       div.style.borderLeftColor = "var(--danger)";
     }
@@ -1010,13 +1022,15 @@ function updateSummary() {
     Other: methods.filter((m) => m.enabled && ["Anti-Analysis", "GitHub"].includes(m.category)).length
   };
   const latest = state.violations[0];
-  els.methodSummary.innerHTML = `
-    <strong>Enabled Methods:</strong> ${enabled}/40<br />
-    <strong>Strikes:</strong> ${state.strikes}<br />
-    <strong>Build Session:</strong> ${state.currentSessionId}<br />
-    <strong>Category Split:</strong> H:${byCategory.HTML} C:${byCategory.CSS} J:${byCategory.JS} L:${byCategory.Logic} S:${byCategory.Screen} E:${byCategory.Env} O:${byCategory.Other}<br />
-    <strong>Latest Signal:</strong> ${latest ? latest.message : "none"}
-  `;
+  els.methodSummary.innerHTML = "";
+  appendSummaryLine("Enabled Methods", `${enabled}/40`);
+  appendSummaryLine("Strikes", String(state.strikes));
+  appendSummaryLine("Build Session", state.currentSessionId);
+  appendSummaryLine(
+    "Category Split",
+    `H:${byCategory.HTML} C:${byCategory.CSS} J:${byCategory.JS} L:${byCategory.Logic} S:${byCategory.Screen} E:${byCategory.Env} O:${byCategory.Other}`
+  );
+  appendSummaryLine("Latest Signal", latest ? latest.message : "none");
   els.sessionState.textContent = state.lock ? "Locked" : state.strikes > 0 ? "Flagged" : "Clean";
   els.sessionState.style.color = state.lock ? "var(--danger)" : state.strikes > 0 ? "var(--warn)" : "var(--accent)";
 
@@ -1024,6 +1038,14 @@ function updateSummary() {
     const ratio = Math.max(0, Math.min(100, (state.strikes / 6) * 100));
     els.strikeMeterFill.style.width = `${ratio}%`;
   }
+}
+
+function appendSummaryLine(label, value) {
+  const strong = document.createElement("strong");
+  strong.textContent = `${label}:`;
+  els.methodSummary.appendChild(strong);
+  els.methodSummary.append(` ${value}`);
+  els.methodSummary.appendChild(document.createElement("br"));
 }
 
 function lockSession(reason = "Policy violations exceeded") {
